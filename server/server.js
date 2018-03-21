@@ -29,14 +29,14 @@ app.get('/todos', function(req, res) {
     });
   }, function(err) {
     res.status(400).send(err);
-  })
-})
+  });
+});
 
 
 
 app.listen(3000, function() {
   console.log('Started on port 3000');
-})
+});
 
 module.exports = {
   app: app
