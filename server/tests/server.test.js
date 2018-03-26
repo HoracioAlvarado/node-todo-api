@@ -254,7 +254,9 @@ describe('POST /users', function () {
           expect(user).toBeDefined;
           expect(user.password).not.toBe(password);
           done();
-        })
+        }).catch(function (e) {
+          done(e);
+        });
       });
   });
 
@@ -285,5 +287,64 @@ describe('POST /users', function () {
       })
       .expect(400)
       .end(done);
-  })
-})
+  });
+});
+
+describe('POST /users/login', function () {
+  it('should login user an return auth token', function (done) {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: users[1].email,
+        password: users[1].password
+      })
+      .expect(200)
+      .expect(function (res) {
+        expect(res.headers['x-auth']).toBeDefined();
+      })
+      .end(function (err, res) {
+        if (err) {
+          return done(err);
+        }
+
+        User.findById(users[1]._id).then(function (user) {
+          expect(user.tokens[0]).toEqual(expect.objectContaining({
+            access: 'auth',
+            token: res.headers['x-auth']
+          }));
+
+          done();
+        }).catch(function (e) {
+          done(e);
+        });
+
+      });
+  });
+
+  it('should reject invalid login', function (done) {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: users[1].email,
+        password: '123123'
+      })
+      .expect(400)
+      .expect(function (res) {
+        expect(res.headers['x-auth']).toBeUndefined();
+      })
+      .end(function (err, res) {
+        if (err) {
+          return done(err);
+        }
+
+        User.findById(users[1]._id).then(function (user) {
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch(function (e) {
+          done(e);
+        });
+
+      });
+  });
+});
+
