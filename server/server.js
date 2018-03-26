@@ -129,7 +129,15 @@ app.post('/users/login', function (req, res) {
   }).catch(function (e) {
     res.status(400).send();
   });
-})
+});
+
+app.delete('/users/me/token', authenticate, function (req, res) {
+  req.user.removeToken(req.token).then(function () {
+    res.status(200).send();
+  }, function (e) {
+    res.status(400).send();
+  });
+});
 
 app.listen(3000, function() {
   console.log('Started on port 3000');
