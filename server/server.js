@@ -9,6 +9,7 @@ var mongoose = require('./db/mongoose');
 var Todo = require('./models/todo').Todo;
 var User = require('./models/user').User;
 var app = express();
+var authenticate = require('./middleware/authenticate').authenticate;
 
 app.use(bodyParser.json());
 
@@ -111,6 +112,10 @@ app.post('/users', function(req, res) {
     res.status(400).send('Error: ', err);
   });
   console.log(req.body);
+});
+
+app.get('/users/me', authenticate, function (req, res) {
+    res.send(req.user);
 });
 
 app.listen(3000, function() {
