@@ -14,9 +14,10 @@ var authenticate = require('./middleware/authenticate').authenticate;
 
 app.use(bodyParser.json());
 
-app.post('/todos', function(req, res) {
+app.post('/todos', authenticate, function(req, res) {
   var todo = new Todo({
-    text: req.body.text
+    text: req.body.text,
+    _creator: req.user._id
   });
 
   todo.save().then(function(doc) {
@@ -27,8 +28,10 @@ app.post('/todos', function(req, res) {
   console.log(req.body);
 });
 
-app.get('/todos', function(req, res) {
-  Todo.find().then(function(todos) {
+app.get('/todos', authenticate, function(req, res) {
+  Todo.find({
+    _creator: req.user._id
+  }).then(function(todos) {
     res.send({
       todos: todos
     });
@@ -37,7 +40,7 @@ app.get('/todos', function(req, res) {
   });
 });
 
-app.get('/todos/:id', function (req, res) {
+app.get('/todos/:id', authenticate, function (req, res) {
   
   var id = req.params.id;
 
@@ -46,7 +49,7 @@ app.get('/todos/:id', function (req, res) {
     return res.status(404).send();
   }
   
-  Todo.findById(id).then(function (todo) {
+  Todo.findOne({_id: id, _creator: req.user._id}).then(function (todo) {
     if (!todo) {
       return res.status(404).send();
     }
@@ -58,14 +61,14 @@ app.get('/todos/:id', function (req, res) {
   });
 });
 
-app.delete('/todos/:id', function (req, res) {
+app.delete('/todos/:id', authenticate, function (req, res) {
   var idToDelete = req.params.id;
 
   if (!ObjectID.isValid(idToDelete)) {
     return res.status(404).send();
   }
 
-  Todo.findByIdAndRemove(idToDelete).then(function (todo) {
+  Todo.findOneAndRemove({_id: idToDelete, _creator: req.user._id}).then(function (todo) {
     if (!todo)
       return res.status(404).send();
     else
@@ -75,7 +78,7 @@ app.delete('/todos/:id', function (req, res) {
   })
 });
 
-app.patch('/todos/:id', function (req, res) {
+app.patch('/todos/:id', authenticate, function (req, res) {
   var id = req.params.id;
   var body = _.pick(req.body, ['text', 'completed']);
 
@@ -90,7 +93,7 @@ app.patch('/todos/:id', function (req, res) {
     body.completedAt = null;
   }
 
-  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then(function (todo) {
+  Todo.findOneAndUpdate({_id: id, _creator: req.user._id}, {$set: body}, {new: true}).then(function (todo) {
     if (!todo) {
       return res.status(404).send();
     }
