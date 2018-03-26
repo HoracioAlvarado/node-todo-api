@@ -109,7 +109,7 @@ app.post('/users', function(req, res) {
   }).then(function (token) {
     res.header('x-auth', token).send(user);
   }).catch(function (err) {
-    res.status(400).send('Error: ', err);
+    res.status(400).send('Error: ' + err);
   });
   console.log(req.body);
 });
