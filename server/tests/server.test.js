@@ -138,7 +138,28 @@ describe('DELETE /todos/:id', function() {
         }
 
         Todo.findById(hexId).then(function (todo) {
-          expect(todo).toBeNull();
+          expect(todo).toBeFalsy();
+          done();
+        }).catch(function (e) {
+          done(e);
+        });
+      });
+  });
+
+  it('should not remove a todo from another user', function(done) {
+    var hexId = todos[1]._id.toHexString();
+
+    request(app)
+      .delete('/todos/' + hexId)
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(404)
+      .end(function (err, res) {
+        if (err) {
+          return done(err);
+        }
+
+        Todo.findById(hexId).then(function (todo) {
+          expect(todo).toBeDefined();
           done();
         }).catch(function (e) {
           done(e);
@@ -215,7 +236,7 @@ describe('PATCH /todos/:id', function() {
       .expect(200)
       .expect(function(res) {
         expect(res.body.todo.completed).toBe(false);
-        expect(res.body.todo.completedAt).toBeNull();
+        expect(res.body.todo.completedAt).toBeFalsy();
         expect(res.body.todo.text).toBe(text);
       })
       .end(done);
@@ -277,8 +298,8 @@ describe('POST /users', function () {
       })
       .expect(200)
       .expect(function (res) {
-        expect(res.headers['x-auth']).toBeDefined();
-        expect(res.body._id).toBeDefined();
+        expect(res.headers['x-auth']).toBeTruthy();
+        expect(res.body._id).toBeTruthy();
         expect(res.body.email).toBe(email);
       })
       .end(function (err) {
@@ -287,7 +308,7 @@ describe('POST /users', function () {
         }
 
         User.findOne({email}).then(function (user) {
-          expect(user).toBeDefined;
+          expect(user).toBeTruthy();
           expect(user.password).not.toBe(password);
           done();
         }).catch(function (e) {
